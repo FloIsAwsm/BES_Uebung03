@@ -154,5 +154,5 @@ static key_t generateKey(void)
 {
 	static int cnt = 1;
 
-	return ((KEY_MULTIPLIER * getuid()) + cnt);
+	return ((KEY_MULTIPLIER * getuid()) + cnt++);
 }
