@@ -1,10 +1,36 @@
 #include <stdio.h>
 #include "SharedMemory.h"
 
-int main(int argc, char ** argv)
+static const char * argstr = "m:";
+
+int main(int argc, const char * const * argv)
 {
 	// use getopt()
+	const char * appname = *argv;
+	int opt;
 	int size = 0;
+  while ((opt = getopt (argc, argv, argstr)) != -1)
+  {
+    if(opt == 'm')
+    {
+    	char * pEnd = 0;
+		size = strtol(params[i], &pEnd, 10);
+    	if(*pEnd != '\0')
+    	{
+    		print_usage(appname);
+    	}
+    }
+    else
+    {
+    	print_usage(appname);
+    }
+  }
+
+  if(size < 1)
+  {
+  	print_usage(appname);
+  	return EXIT_FAILURE;
+  }
 	
 	return method(size);
 }
@@ -19,8 +45,8 @@ int method(int size)
 	
 	do{
 		c = memread();
-		printf("%c", c);
-	}while((char) c != 'EOF');
+		fputc((char) c, stdout);
+	}while(c != EOF);
 	
 	detach();
 	
@@ -29,8 +55,12 @@ int method(int size)
 	return 0;
 }
 
-int print_usage()
+/* TODO: needs to be in a shared file... */
+void print_usage(const char * appname)
 {
-	// error checking ...
-	printf("%s\n" , "USAGE: ");
+	if(fprintf(stderr, "USAGE: %s -m <elements>\n", appname) < 0)
+	{
+		fprintf(stderr, "%s: %s\n", appname, stderr(errno));
+		exit(EXIT_FAILURE);
+	}
 }
