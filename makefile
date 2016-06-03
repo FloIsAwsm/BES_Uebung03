@@ -19,6 +19,7 @@
 
 CC=gcc52
 CFLAGS=-DDEBUG -Wall -pedantic -Werror -Wextra -Wstrict-prototypes -fno-common -g -O3 -std=gnu11
+LIB=-lsem182
 CP=cp
 CD=cd
 MV=mv
@@ -43,13 +44,13 @@ EXCLUDE_PATTERN=footrulewidth
 ## --------------------------------------------------------------- targets --
 ##
 
-all: $(BIN) doc
+all: $(BIN)
 
 sender: $(OBJSEND) $(OBJSHM)
-	$(CC) -o $@ $^ -lsem182
+	$(CC) -o $@ $^ $(LIB)
 
 empfaenger: $(OBJEMPF) $(OBJSHM)
-	$(CC) -o $@ $^ -lsem182
+	$(CC) -o $@ $^ $(LIB)
 
 clean:
 	$(RM) *.o *~ $(BIN)

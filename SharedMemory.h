@@ -4,16 +4,16 @@
 
 #define EXIT_ERROR (-1)
 
-void initialize();
+void meminit(int size);
 
-void remove();
+void memrmv(void);
 
-void attach();
+void memattach(void);
 
-void detach();
+void memdetach(void);
 
-int memread();
+short memread(void);
 
-void memwrite();
+void memwrite(const short elem);
 
 #endif /* SHAREDMEMORY_H */
