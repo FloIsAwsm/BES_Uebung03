@@ -15,25 +15,24 @@
 #define COMMON_H
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * global variable that stores the application name
  */
 extern char * appname;
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief prints the correct usage of the application
  */
 void print_usage(void);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief parses the command line arguments
+ * @details sets the application name and parses the command line arguments
+ * for the buffer size with the help of getopt().
  * 
- * @param argc [description]
- * @param argv [description]
+ * @param argc number of command line arguments
+ * @param argv array of strings containing the command line arguments
  * 
- * @return [description]
+ * @return the buffer size specified in the command line argument
  */
 int getBufferSize(int argc, char * const * argv);
 

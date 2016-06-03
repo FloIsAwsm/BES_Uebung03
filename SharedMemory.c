@@ -10,8 +10,6 @@
  * 
  * @version 100
  * 
- * @todo error messages
- * 
  */
 #include <stdio.h> // TODO
 #include <stdlib.h> // TODO
@@ -25,39 +23,57 @@
 #include "common.h"
 
 /**
- * 
+ * generated key for shared memory segment
  */
 static int sharedMemKey;
+/**
+ * generated key for read semaphore
+ */
 static int semKeyRead;
+/**
+ * generated key for write semaphore
+ */
 static int semKeyWrite;
 
 /**
- * 
+ * id of shared memory segment
  */
 static int sharedMemId = 0;
+/**
+ * id of write semaphore
+ */
 static int semWriteId = 0;
+/**
+ * id of read semaphore
+ */
 static int SemReadId = 0;
 
 /**
- * 
+ * size of the shared memory segment (in elements not bytes)
  */
 static int sharedMemSize;
+/**
+ * pointer to the starting address of the shared memory segment
+ */
 static short * sharedMemAddr = NULL;
 
 /**
- * 
+ * define for the key generation
  */
 #define KEY_MULTIPLIER 1000
+/**
+ * define for permissions
+ */
 #define PERMISSIONS 0660
 
 /**
- * @brief [brief description]
- * @details [long description]
- * @return [description]
+ * @brief generates a new key
+ * @details generates a key for the semaphores and the shared memory segment using the user id and key multiplier.
+ * with every call a new key is generated
+ * @return generated key
  */
 static key_t generateKey(void);
 
-/* soll alles initialisieren (von einem der beiden Prozesse egal welcher) */
 void meminit(int size)
 {
 	// save size
@@ -69,10 +85,17 @@ void meminit(int size)
 	semKeyWrite = generateKey();
 
 	// create shared memory
+	errno = 0;
 	sharedMemId = shmget(sharedMemKey, (size * sizeof(short)), PERMISSIONS | IPC_CREAT | IPC_EXCL);
-	if(sharedMemId == EXIT_ERROR && errno == EEXIST)
+	if(sharedMemId == EXIT_ERROR)
 	{
+		if(errno != EEXIST)
+		{
+			fprintf(stderr, "%s: %s\n", appname, strerror(errno));
+			exit(EXIT_FAILURE);
+		}
 		// shared memory already exists
+		errno = 0;
 		sharedMemId = shmget(sharedMemKey, (size * sizeof(short)), 0);
 		if(sharedMemId == EXIT_ERROR)
 		{
@@ -80,46 +103,55 @@ void meminit(int size)
 			exit(EXIT_FAILURE);
 		}
 	}
-	else if(sharedMemId == EXIT_ERROR)
-	{
-		fprintf(stderr, "%s: %s\n", appname, strerror(errno));
-		exit(EXIT_FAILURE);
-	}
 
 	// create write semaphore (is initialized with size)
-	semWriteId = seminit(semKeyWrite, PERMISSIONS, (size - 1)); // todo test with size
+	errno = 0;
+	semWriteId = seminit(semKeyWrite, PERMISSIONS, size);
 	if (semWriteId == EXIT_ERROR)
 	{
-		// todo does errno get set?
+		if(errno != EEXIST)
+		{
+			fprintf(stderr, "%s: %s\n", appname, strerror(errno));
+			memrmv();
+			exit(EXIT_FAILURE);
+		}
+		errno = 0;
 		// sem already exists
 		semWriteId = semgrab(semKeyWrite);
 		if (semWriteId == EXIT_ERROR)
 		{
-			// todo does errno get set?
-			fprintf(stderr, "%s: Could not aquire semaphore.\n", appname);
+			fprintf(stderr, "%s: %s\n", appname, strerror(errno));
 			memrmv();
 			exit(EXIT_FAILURE);
 		}
 	}
 
 	// create read semaphore (initialize with 0)
+	errno = 0;
 	SemReadId = seminit(semKeyRead, PERMISSIONS, 0);
 	if (SemReadId == EXIT_ERROR)
 	{
+		if(errno != EEXIST)
+		{
+			fprintf(stderr, "%s: %s\n", appname, strerror(errno));
+			memrmv();
+			exit(EXIT_FAILURE);
+		}
+		errno = 0;
 		// sem already exists
 		SemReadId = semgrab(semKeyRead);
 		if (SemReadId == EXIT_ERROR)
 		{
-			fprintf(stderr, "%s: Could not aquire semaphore.\n", appname);
+			fprintf(stderr, "%s: %s\n", appname, strerror(errno));
 			memrmv();
 			exit(EXIT_FAILURE);
 		}
 	}
 }
 
-/* soll das shared memory Segement in den Speicher einfügen. Muss gemacht werden um Zugriff zum Shared memory zu bekommen */
 void memattach(void)
 {
+	errno = 0;
 	sharedMemAddr = (short *) shmat(sharedMemId, NULL, 0);
 	if((void *) sharedMemAddr == (void *) -1)
 	{
@@ -131,6 +163,7 @@ void memattach(void)
 
 void memdetach(void)
 {
+	errno = 0;
 	if(shmdt(sharedMemAddr) != 0)
 	{
 		fprintf(stderr, "%s: %s\n", appname, strerror(errno));
@@ -147,22 +180,25 @@ void memrmv(void)
 	// remove semaphores first
 	if(SemReadId != 0 || SemReadId != EXIT_ERROR)
 	{
+		errno = 0;
 		if(semrm(SemReadId) == EXIT_ERROR)
 		{
-			fprintf(stderr, "%s: Could not remove semaphore\n", appname);
+			fprintf(stderr, "%s: %s\n", appname, strerror(errno));
 			// do not return here; try to clean up as much as possible	
 		}
 	}
 	if(semWriteId != 0 || semWriteId != EXIT_ERROR)
 	{
+		errno = 0;
 		if(semrm(semWriteId) == EXIT_ERROR)
 		{
-			fprintf(stderr, "%s: Could not remove semaphore\n", appname);
+			fprintf(stderr, "%s: %s\n", appname, strerror(errno));
 			// do not return here; try to clean up as much as possible
 		}
 	}
 
 	// now mark shared memory for destruction
+	errno = 0;
 	if(sharedMemId != 0 && sharedMemId != EXIT_ERROR && shmctl(sharedMemId, IPC_RMID, &buf) == EXIT_ERROR)
 	{
 		fprintf(stderr, "%s: %s\n", appname, strerror(errno));

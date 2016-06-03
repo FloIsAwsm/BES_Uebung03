@@ -20,14 +20,6 @@
 #include "SharedMemory.h"
 #include "common.h"
 
-/**
- * @brief [brief description]
- * @details [long description]
- * 
- * @param argc [description]
- * @param argv [description]
- * @return [description]
- */
 int main(int argc, char * const * argv)
 {
   int size = getBufferSize(argc, argv);
@@ -38,6 +30,7 @@ int main(int argc, char * const * argv)
 
   while (c != (short) EOF)
   {
+    errno = 0;
     if (fputc((char) c, stdout) == EOF)
     {
       fprintf(stderr, "%s: %s\n", appname, strerror(errno));

@@ -15,48 +15,43 @@
 #define SHAREDMEMORY_H
 
 /**
- * 
+ * return code indicating an error
  */
 #define EXIT_ERROR (-1)
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief initializes the semaphores and shared memory segment
+ * @details 
  * 
- * @param size [description]
+ * @param size size of the shared memory segment
  */
 void meminit(int size);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief removes semaphores and marks shared memory segment for destruction
  */
 void memrmv(void);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief attaches the process to the shared memory segment
  */
 void memattach(void);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief detaches the process to the shared memory segment
  */
 void memdetach(void);
 
 /**
- * @brief [brief description]
- * @details [long description]
- * @return [description]
+ * @brief reads from shared memory segment
+ * @return the value read from the shared memory segment
  */
 short memread(void);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief writes to shared memory segment
  * 
- * @param elem [description]
+ * @param elem element to be written
  */
 void memwrite(const short elem);
 

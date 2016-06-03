@@ -18,14 +18,6 @@
 #include "SharedMemory.h"
 #include "common.h"
 
-/**
- * @brief [brief description]
- * @details [long description]
- *
- * @param argc [description]
- * @param argv [description]
- * @return [description]
- */
 int main(int argc, char * const * argv)
 {
 	int size = getBufferSize(argc, argv);
@@ -35,6 +27,7 @@ int main(int argc, char * const * argv)
 	memattach();
 
 	do {
+		errno = 0;
 		if ((c = fgetc(stdin)) == (short) EOF && ferror(stdin) != 0)
 		{
 			fprintf(stderr, "%s: %s\n", appname, strerror(errno));

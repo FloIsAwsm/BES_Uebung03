@@ -20,7 +20,7 @@
 #include "common.h"
 
 /**
- * 
+ * c-string containing all argument options for getopt()
  */
 static const char * argstr = "m:";
 
@@ -28,6 +28,7 @@ char * appname = NULL;
 
 void print_usage(void)
 {
+	errno = 0;
 	if (fprintf(stderr, "USAGE: %s -m <size>\n", appname) < 0)
 	{
 		fprintf(stderr, "%s: %s\n", appname, strerror(errno));
@@ -47,7 +48,6 @@ int getBufferSize(int argc, char * const * argv)
 			char * pEnd = 0;
 			if (optarg == NULL)
 			{
-				printf("optarg == NULL\n");
 				print_usage();
 				exit(EXIT_FAILURE);
 			}
@@ -76,7 +76,7 @@ int getBufferSize(int argc, char * const * argv)
 	}
 	else
 	{
-		printf("%s: missing mandatory argument.\n", appname);
+		fprintf(stderr, "%s: missing mandatory argument.\n", appname);
 		print_usage();
 	}
 
