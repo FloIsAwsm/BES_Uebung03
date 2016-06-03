@@ -8,20 +8,37 @@
 #include <errno.h> // errno
 #include "SharedMemory.h"
 
+/**
+ * 
+ */
 static int sharedMemKey;
 static int semKeyRead;
 static int semKeyWrite;
 
+/**
+ * 
+ */
 static int sharedMemId = 0;
 static int semWriteId = 0;
 static int SemReadId = 0;
 
+/**
+ * 
+ */
 static int sharedMemSize;
 static short * sharedMemAddr = NULL;
 
+/**
+ * 
+ */
 #define KEY_MULTIPLIER 1000
-#define PERMISSIONS 0666
+#define PERMISSIONS 0660
 
+/**
+ * @brief [brief description]
+ * @details [long description]
+ * @return [description]
+ */
 static key_t generateKey(void);
 
 /* soll alles initialisieren (von einem der beiden Prozesse egal welcher) */
@@ -141,11 +158,11 @@ void memrmv(void)
 short memread(void)
 {
 	static int index = 0;
-	int elem;
+	short elem;
 
 	errno = 0;
 	while(P(SemReadId) == EXIT_ERROR && errno == EINTR);
-	if(errno != 0)
+	if(errno != 0 && errno != EINTR)
 	{
 		// handle error
 		memrmv();
@@ -160,7 +177,7 @@ short memread(void)
 
 
 	while(V(semWriteId) == EXIT_ERROR && errno == EINTR);
-	if(errno != 0)
+	if(errno != 0 && errno != EINTR)
 	{
 		// handle error
 		memrmv();
@@ -183,7 +200,7 @@ void memwrite(const short elem)
 
 	errno = 0;
 	while(P(semWriteId) == EXIT_ERROR && errno == EINTR);
-	if(errno != 0)
+	if(errno != 0 && errno != EINTR)
 	{
 		// handle error
 		memrmv();
@@ -198,7 +215,7 @@ void memwrite(const short elem)
 
 
 	while(V(SemReadId) == EXIT_ERROR && errno == EINTR);
-	if(errno != 0)
+	if(errno != 0 && errno != EINTR)
 	{
 		// handle error
 		memrmv();
