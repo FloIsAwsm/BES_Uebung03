@@ -23,19 +23,14 @@
 /**
  * @brief [brief description]
  * @details [long description]
- *
- * @param size [description]
+ * 
+ * @param argc [description]
+ * @param argv [description]
  * @return [description]
  */
-int reciever(int size);
-
 int main(int argc, char * const * argv)
 {
-  return reciever(getBufferSize(argc, argv));
-}
-
-int reciever(int size)
-{
+  int size = getBufferSize(argc, argv);
   meminit(size);
   memattach();
 

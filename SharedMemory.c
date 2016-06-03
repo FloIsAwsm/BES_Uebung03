@@ -226,7 +226,7 @@ void memwrite(const short elem)
 	*(sharedMemAddr + index++) = elem;
 
 	errno = 0;
-	while(P(SemReadId) == EXIT_ERROR)
+	while(V(SemReadId) == EXIT_ERROR)
 	{
 		if(errno != EINTR)
 		{

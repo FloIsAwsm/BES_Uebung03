@@ -22,26 +22,13 @@
  * @brief [brief description]
  * @details [long description]
  *
- * @param size [description]
- * @return [description]
- */
-static int sender(int size);
-
-/**
- * @brief [brief description]
- * @details [long description]
- *
  * @param argc [description]
  * @param argv [description]
  * @return [description]
  */
 int main(int argc, char * const * argv)
 {
-	return sender(getBufferSize(argc, argv));
-}
-
-int sender(int size)
-{
+	int size = getBufferSize(argc, argv);
 	short c = 0;
 
 	meminit(size);
