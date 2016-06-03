@@ -27,6 +27,12 @@
 *.i*86
 *.x86_64
 *.hex
+sender
+empfaenger
 
 # Debug files
 *.dSYM/
+
+# TextFiles and LogFiles
+*.txt
+*.log
