@@ -1,3 +1,18 @@
+/**
+ * @file empfaenger.c
+ *
+ * Beispiel 3
+ *
+ * @author Florian Froestl <florian.froestl@technikum-wien.at>
+ * @author David Boisits <david.boisits@technikum-wien.at>
+ *
+ * @date 2016/06/03
+ *
+ * @version 100
+ * 
+ * @todo format
+ *
+ */
 #include <stdio.h> // fputc()
 #include <string.h> // strerr()
 #include <errno.h> // errno
@@ -19,27 +34,24 @@ int main(int argc, char * const * argv)
   return reciever(getBufferSize(argc, argv));
 }
 
-// method to initialize main loop
 int reciever(int size)
 {
   meminit(size);
   memattach();
 
-  int c = 0;
+  short c = memread();
 
-  // TODO rework
-  do {
-    c = memread();
-    if (c == (short) EOF)
-      break;
+  while (c != (short) EOF)
+  {
     if (fputc((char) c, stdout) == EOF)
     {
-      fprintf(stderr, "%s\n", strerror(errno));
+      fprintf(stderr, "%s: %s\n", appname, strerror(errno));
       memdetach();
       memrmv();
       exit(EXIT_FAILURE);
     }
-  } while (c != EOF);
+    c = memread();
+  }
 
   memdetach();
 

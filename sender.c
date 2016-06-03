@@ -1,3 +1,16 @@
+/**
+ * @file sender.c
+ *
+ * Beispiel 3
+ *
+ * @author Florian Froestl <florian.froestl@technikum-wien.at>
+ * @author David Boisits <david.boisits@technikum-wien.at>
+ *
+ * @date 2016/06/03
+ *
+ * @version 100
+ *
+ */
 #include <stdio.h> // fgetc()
 #include <string.h> // strerror()
 #include <errno.h> // errno
@@ -5,40 +18,47 @@
 #include "SharedMemory.h"
 #include "common.h"
 
-/* TODO sender -v prints twice */
-
 /**
  * @brief [brief description]
  * @details [long description]
- * 
+ *
  * @param size [description]
  * @return [description]
  */
 static int sender(int size);
 
+/**
+ * @brief [brief description]
+ * @details [long description]
+ *
+ * @param argc [description]
+ * @param argv [description]
+ * @return [description]
+ */
 int main(int argc, char * const * argv)
-{	
+{
 	return sender(getBufferSize(argc, argv));
 }
 
 int sender(int size)
 {
-	int c = 0;
-	
+	short c = 0;
+
 	meminit(size);
 	memattach();
-	
-	do{
-		c = fgetc(stdin); // TODO error check
+
+	do {
+		if ((c = fgetc(stdin)) == (short) EOF && ferror(stdin) != 0)
+		{
+			fprintf(stderr, "%s: %s\n", appname, strerror(errno));
+			memdetach();
+			memrmv();
+			return EXIT_FAILURE;
+		}
 		memwrite(c);
-	} while(c != EOF);
-  if (ferror(stdin)) // TODO refactor
-  {
-    memdetach();
-    return EXIT_FAILURE;
-  }
+	} while (c != EOF);
 
 	memdetach();
-	
-	return EXIT_SUCCESS;	
+
+	return EXIT_SUCCESS;
 }

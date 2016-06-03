@@ -1,10 +1,25 @@
-#include <stdio.h>
-#include <stdlib.h>
+/**
+ * @file SharedMemory.c
+ * 
+ * Beispiel 3
+ * 
+ * @author Florian Froestl <florian.froestl@technikum-wien.at>
+ * @author David Boisits <david.boisits@technikum-wien.at>
+ * 
+ * @date 2016/06/03
+ * 
+ * @version 100
+ * 
+ * @todo error messages
+ * 
+ */
+#include <stdio.h> // TODO
+#include <stdlib.h> // TODO
 #include <unistd.h> //getuid
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <sem182.h>
-#include <string.h>
+#include <sys/ipc.h> // TODO
+#include <sys/shm.h> // shmget()...
+#include <sem182.h> // P(), V()...
+#include <string.h> // strerror()
 #include <errno.h> // errno
 #include "SharedMemory.h"
 
@@ -60,29 +75,28 @@ void meminit(int size)
 		sharedMemId = shmget(sharedMemKey, (size * sizeof(short)), 0);
 		if(sharedMemId == EXIT_ERROR)
 		{
-			// now we have a problem
-			memrmv();
-			fprintf(stderr, "sharedMemId\n");
+			fprintf(stderr, "%s: %s\n", appname, strerror(errno));
 			exit(EXIT_FAILURE);
 		}
 	}
 	else if(sharedMemId == EXIT_ERROR)
 	{
-		fprintf(stderr, "%s\n", strerror(errno));
+		fprintf(stderr, "%s: %s\n", appname, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
 	// create write semaphore (is initialized with size)
-	semWriteId = seminit(semKeyWrite, PERMISSIONS, (size - 1));
+	semWriteId = seminit(semKeyWrite, PERMISSIONS, (size - 1)); // todo test with size
 	if (semWriteId == EXIT_ERROR)
 	{
+		// todo does errno get set?
 		// sem already exists
 		semWriteId = semgrab(semKeyWrite);
 		if (semWriteId == EXIT_ERROR)
 		{
-			// now we have a problem
+			// todo does errno get set?
+			fprintf(stderr, "%s: Could not aquire semaphore.\n", appname);
 			memrmv();
-			fprintf(stderr, "semWriteId\n");
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -95,9 +109,8 @@ void meminit(int size)
 		SemReadId = semgrab(semKeyRead);
 		if (SemReadId == EXIT_ERROR)
 		{
+			fprintf(stderr, "%s: Could not aquire semaphore.\n", appname);
 			memrmv();
-			// now we have a problem
-			fprintf(stderr, "SemReadId\n");
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -110,118 +123,117 @@ void memattach(void)
 	if((void *) sharedMemAddr == (void *) -1)
 	{
 		memrmv();
-		fprintf(stderr, "attatch(): %s\n", strerror(errno));
+		fprintf(stderr, "%s: %s\n", appname, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 }
 
-/* TODO: what if a Process crashes in case of an error; EDIT: shared mem gets detached by an _exit(2) call */
-/* soll das shared memory segment vom Speicher lösen. Das MUSS jeder Prozess machen sonst kann das Segment nicht gelöscht werden */
 void memdetach(void)
 {
 	if(shmdt(sharedMemAddr) != 0)
 	{
-		fprintf(stderr, "%s\n", strerror(errno));
+		fprintf(stderr, "%s: %s\n", appname, strerror(errno));
 		memrmv();
 		exit(EXIT_FAILURE);
 	}
 
 }
 
-/* soll alles entfernen (im Fehlerfall egal welcher Prozess) nur vom empfaenger */
 void memrmv(void)
 {
 	struct shmid_ds buf;
 
-	//printf("SemReadId: %d semWriteId: %d sharedMemId: %d\n",SemReadId, semWriteId,sharedMemId);
 	// remove semaphores first
 	if(SemReadId != 0 || SemReadId != EXIT_ERROR)
 	{
-		semrm(SemReadId);
+		if(semrm(SemReadId) == EXIT_ERROR)
+		{
+			fprintf(stderr, "%s: Could not remove semaphore\n", appname);
+			// do not return here; try to clean up as much as possible	
+		}
 	}
 	if(semWriteId != 0 || semWriteId != EXIT_ERROR)
 	{
-		semrm(semWriteId);
+		if(semrm(semWriteId) == EXIT_ERROR)
+		{
+			fprintf(stderr, "%s: Could not remove semaphore\n", appname);
+			// do not return here; try to clean up as much as possible
+		}
 	}
 
 	// now mark shared memory for destruction
 	if(sharedMemId != 0 && sharedMemId != EXIT_ERROR && shmctl(sharedMemId, IPC_RMID, &buf) == EXIT_ERROR)
 	{
-		// errno is set...
-		// but what do we do? maybe buf will help
+		fprintf(stderr, "%s: %s\n", appname, strerror(errno));
 		exit(EXIT_FAILURE);
-
 	}
 }
 
-/* liest ein Element aus dem shared memory bereich */
 short memread(void)
 {
 	static int index = 0;
 	short elem;
 
 	errno = 0;
-	while(P(SemReadId) == EXIT_ERROR && errno == EINTR);
-	if(errno != 0 && errno != EINTR)
+	while(P(SemReadId) == EXIT_ERROR)
 	{
-		// handle error
-		memrmv();
-		fprintf(stderr, "P() read\n");
-		exit(EXIT_FAILURE);
-
+		if(errno != EINTR)
+		{
+			fprintf(stderr, "%s: %s\n", appname, strerror(errno));
+			memdetach();
+			memrmv();
+			exit(EXIT_FAILURE);
+		}
 	}
 
-	//printf("read\n");
-	// now read
 	elem = *(sharedMemAddr + index++);
 
-
-	while(V(semWriteId) == EXIT_ERROR && errno == EINTR);
-	if(errno != 0 && errno != EINTR)
+	errno = 0;
+	while(V(semWriteId) == EXIT_ERROR)
 	{
-		// handle error
-		memrmv();
-		fprintf(stderr, "V() read\n");
-		exit(EXIT_FAILURE);
-
+		if(errno != EINTR)
+		{
+			fprintf(stderr, "%s: %s\n", appname, strerror(errno));
+			memdetach();
+			memrmv();
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	// make sure index stays in bounds
 	if (index >= sharedMemSize) index = 0;
 
 	return elem;
-
 }
 
-/* schreibt ein shared memory element */
 void memwrite(const short elem)
 {
 	static int index = 0;
 
 	errno = 0;
-	while(P(semWriteId) == EXIT_ERROR && errno == EINTR);
-	if(errno != 0 && errno != EINTR)
+	while(P(semWriteId) == EXIT_ERROR)
 	{
-		// handle error
-		memrmv();
-		fprintf(stderr, "P() write\n");
-		exit(EXIT_FAILURE);
-
+		if(errno != EINTR)
+		{
+			fprintf(stderr, "%s: %s\n", appname, strerror(errno));
+			memdetach();
+			memrmv();
+			exit(EXIT_FAILURE);
+		}
 	}
 
-	// now write
-	//printf("write\n");
 	*(sharedMemAddr + index++) = elem;
 
-
-	while(V(SemReadId) == EXIT_ERROR && errno == EINTR);
-	if(errno != 0 && errno != EINTR)
+	errno = 0;
+	while(P(SemReadId) == EXIT_ERROR)
 	{
-		// handle error
-		memrmv();
-		fprintf(stderr, "V() write\n");
-		exit(EXIT_FAILURE);
-
+		if(errno != EINTR)
+		{
+			fprintf(stderr, "%s: %s\n", appname, strerror(errno));
+			memdetach();
+			memrmv();
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	// make sure index stays in bounds
