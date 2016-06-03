@@ -28,11 +28,7 @@ DOXYGEN=doxygen
 
 OBJSEND= sender.o
 OBJEMPF= empfaenger.o
-<<<<<<< HEAD
 OBJSHM= SharedMemory.o common.o
-=======
-OBJSHM= SharedMemory.o
->>>>>>> 26266e67af58fca944a0a45f43003f8640241cec
 BIN= sender empfaenger
 
 EXCLUDE_PATTERN=footrulewidth

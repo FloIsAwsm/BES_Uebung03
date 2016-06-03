@@ -8,27 +8,20 @@
 #include <errno.h> // errno
 #include "SharedMemory.h"
 
-<<<<<<< HEAD
 /**
  * 
  */
-=======
->>>>>>> 26266e67af58fca944a0a45f43003f8640241cec
 static int sharedMemKey;
 static int semKeyRead;
 static int semKeyWrite;
 
-<<<<<<< HEAD
 /**
  * 
  */
-=======
->>>>>>> 26266e67af58fca944a0a45f43003f8640241cec
 static int sharedMemId = 0;
 static int semWriteId = 0;
 static int SemReadId = 0;
 
-<<<<<<< HEAD
 /**
  * 
  */
@@ -46,14 +39,6 @@ static short * sharedMemAddr = NULL;
  * @details [long description]
  * @return [description]
  */
-=======
-static int sharedMemSize;
-static int * sharedMemAddr = NULL;
-
-#define KEY_MULTIPLIER 1000
-#define PERMISSIONS 0666
-
->>>>>>> 26266e67af58fca944a0a45f43003f8640241cec
 static key_t generateKey(void);
 
 /* soll alles initialisieren (von einem der beiden Prozesse egal welcher) */
@@ -68,19 +53,11 @@ void meminit(int size)
 	semKeyWrite = generateKey();
 
 	// create shared memory
-<<<<<<< HEAD
 	sharedMemId = shmget(sharedMemKey, (size * sizeof(short)), PERMISSIONS | IPC_CREAT | IPC_EXCL);
 	if(sharedMemId == EXIT_ERROR && errno == EEXIST)
 	{
 		// shared memory already exists
 		sharedMemId = shmget(sharedMemKey, (size * sizeof(short)), 0);
-=======
-	sharedMemId = shmget(sharedMemKey, (size * sizeof(int)), PERMISSIONS | IPC_CREAT | IPC_EXCL);
-	if(sharedMemId == EXIT_ERROR && errno == EEXIST)
-	{
-		// shared memory already exists
-		sharedMemId = shmget(sharedMemKey, (size * sizeof(int)), 0);
->>>>>>> 26266e67af58fca944a0a45f43003f8640241cec
 		if(sharedMemId == EXIT_ERROR)
 		{
 			// now we have a problem
@@ -129,11 +106,7 @@ void meminit(int size)
 /* soll das shared memory Segement in den Speicher einfügen. Muss gemacht werden um Zugriff zum Shared memory zu bekommen */
 void memattach(void)
 {
-<<<<<<< HEAD
 	sharedMemAddr = (short *) shmat(sharedMemId, NULL, 0);
-=======
-	sharedMemAddr = (int *) shmat(sharedMemId, NULL, 0);
->>>>>>> 26266e67af58fca944a0a45f43003f8640241cec
 	if((void *) sharedMemAddr == (void *) -1)
 	{
 		memrmv();
@@ -182,17 +155,10 @@ void memrmv(void)
 }
 
 /* liest ein Element aus dem shared memory bereich */
-<<<<<<< HEAD
 short memread(void)
 {
 	static int index = 0;
 	short elem;
-=======
-int memread(void)
-{
-	static int index = 0;
-	int elem;
->>>>>>> 26266e67af58fca944a0a45f43003f8640241cec
 
 	errno = 0;
 	while(P(SemReadId) == EXIT_ERROR && errno == EINTR);
@@ -228,11 +194,7 @@ int memread(void)
 }
 
 /* schreibt ein shared memory element */
-<<<<<<< HEAD
 void memwrite(const short elem)
-=======
-void memwrite(const int elem)
->>>>>>> 26266e67af58fca944a0a45f43003f8640241cec
 {
 	static int index = 0;
 
@@ -272,41 +234,3 @@ static key_t generateKey(void)
 
 	return ((KEY_MULTIPLIER * getuid()) + cnt++);
 }
-<<<<<<< HEAD
-=======
-
-void LogByte(char * file, int c)
-{
-	static int firstentry = 1;
-	FILE * pFile = NULL;
-	if (firstentry)
-	{
-		firstentry = 0;
-		pFile = fopen(file, "w");
-	}
-	else
-	{
-		pFile = fopen(file, "a");
-	}
-	fprintf(pFile, "0x%.8x ", ( c));
-	fclose(pFile);
-}
-
-void WriteFile(int c)
-{
-	static int firstentry = 1;
-	char * file = "ausgabe.txt";
-	FILE * pFile = NULL;
-	if (firstentry)
-	{
-		firstentry = 0;
-		pFile = fopen(file, "w");
-	}
-	else
-	{
-		pFile = fopen(file, "a");
-	}
-	fprintf(pFile, "%c", (char) c);
-	fclose(pFile);
-}
->>>>>>> 26266e67af58fca944a0a45f43003f8640241cec
