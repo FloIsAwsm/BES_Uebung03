@@ -11,7 +11,7 @@
  * @version 100
  * 
  */
-#include <stdio.h> // TODO
+#include <stdio.h> // fprintf()
 #include <stdlib.h> // strtol()
 #include <unistd.h> // getopt()
 #include <string.h> // strerr()
@@ -24,7 +24,7 @@
  */
 static const char * argstr = "m:";
 
-char * appname = NULL; // TODO test without this
+char * appname = NULL;
 
 void print_usage(void)
 {
@@ -40,14 +40,14 @@ int getBufferSize(int argc, char * const * argv)
 	appname = *argv;
 	int opt;
 	long int size = 0;
-	// use a while loop in case we want to add arguments later
-	while ((opt = getopt (argc, argv, argstr)) != -1)
+	if ((opt = getopt (argc, argv, argstr)) != -1)
 	{
 		if (opt == 'm')
 		{
 			char * pEnd = 0;
 			if (optarg == NULL)
 			{
+				printf("optarg == NULL\n");
 				print_usage();
 				exit(EXIT_FAILURE);
 			}
@@ -62,25 +62,29 @@ int getBufferSize(int argc, char * const * argv)
 				fprintf(stderr, "%s: argument is not a valid number\n", appname);
 				print_usage();
 			}
-			if (size >= INT_MAX || size < 0) // optarg == '\0'
+			if (size > INT_MAX || size <= 0)
 			{
-				fprintf(stderr, "%s: size must be between %d and %d\n", appname, 0, INT_MAX);
+				fprintf(stderr, "%s: size must be between %d and %d\n", appname, 1, INT_MAX);
 				print_usage();
 			}
 		}
 		else
 		{
-			fprintf(stderr, "%s: What happend here? TODO\n", appname);
+			// getopt() prints an error message ;)
 			print_usage();
 		}
+	}
+	else
+	{
+		printf("%s: missing mandatory argument.\n", appname);
+		print_usage();
 	}
 
 	if (optind < argc)
 	{
-		fprintf(stderr, "%s: missing mandatory argument.\n", appname);
+		fprintf(stderr, "%s: containing one or more invalid arguments.\n", appname);
 		print_usage();
 	}
 
-	// TODO test ./sender -m0 ; ./sender ; ./sender -m
 	return (int) size;
 }
